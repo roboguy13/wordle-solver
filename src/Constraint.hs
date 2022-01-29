@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Constraint
@@ -17,11 +16,6 @@ import           Control.Monad.State
 import           Word
 import           Result
 
-newtype Defined a = Defined (Maybe a) deriving (Functor, Applicative, Monad)
-
-pattern Known x = Defined (Just x)
-pattern Unknown = Defined Nothing
-
 data Constraint
   = NotInWord Char
   | AtLeast Char Int
@@ -30,8 +24,9 @@ data Constraint
   | AtIx    Char Ix
   deriving (Show, Eq, Ord)
 
--- getConstraintChar :: Constraint -> Char
--- getConstraint
+-- TODO: Restructure to improve efficiency
+matches :: Result -> Guess -> Bool
+matches r g = all (matchesConstraint g) (resultToCts r)
 
 newtype Occurs a = Occurs [(a, Int)] deriving (Functor)
 
@@ -48,12 +43,8 @@ updateOccurs (ResultCell _ c) occurs = insertOccurs c occurs
 lookupOccurs :: Eq a => a -> Occurs a -> Maybe Int
 lookupOccurs x (Occurs occurs) = lookup x occurs
 
--- lookupConstraints :: Char -> [Constraint] -> Defined Constraint
--- lookupConstraints _ [] = Unknown
--- lookupConstraint c (
-
-insertResult :: Result -> [Constraint] -> [Constraint]
-insertResult r cts0 = (cts0 ++) . toList . flip evalState occurs0 $ mapM go (ixed r)
+resultToCts :: Result -> [Constraint]
+resultToCts r = toList . flip evalState occurs0 $ mapM go (ixed r)
   where
     occurs0 = foldr updateOccurs (Occurs []) r
 

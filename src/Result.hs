@@ -27,6 +27,13 @@ type Result = Word ResultCell
 getCellItem :: ResultCell' a -> a
 getCellItem (ResultCell _ x) = x
 
+correctCell :: ResultCell' a -> Bool
+correctCell (ResultCell Correct _) = True
+correctCell _ = False
+
+correctResult :: Result -> Bool
+correctResult = all correctCell
+
 parseResultState :: Char -> ResultState
 parseResultState '?' = Wrong
 parseResultState '*' = WrongSpot
@@ -41,16 +48,19 @@ showResult :: Result -> String
 showResult = toList . fmap showResultCell
 
 parseResult :: Word Char -> String -> Result
-parseResult guess resultStr = ResultCell <$> toWord (map parseResultState resultStr) <*> guess
+parseResult guess resultStr =
+  ResultCell
+    <$> toWord (map parseResultState resultStr)
+    <*> guess
 
 genResult :: Word Char -> Guess -> Result
-genResult correct guess = makeCell <$> (`evalState` startUses) (sequenceA (go <$> correct <*> guess)) <*> guess
+genResult correct guess =
+    ResultCell
+      <$> flip evalState startUses (sequenceA (go <$> correct <*> guess))
+      <*> guess
   where
     startUses :: [(Char, Int)]
     startUses = getCounts $ toList correct
-
-    makeCell :: ResultState -> Char -> ResultCell
-    makeCell = ResultCell
 
     useChar :: ResultState -> Char -> State [(Char, Int)] ResultState
     useChar state c = do
@@ -69,45 +79,23 @@ genResult correct guess = makeCell <$> (`evalState` startUses) (sequenceA (go <$
 insertIntoCount :: Eq a => a -> [(a, Int)] -> [(a, Int)]
 insertIntoCount c [] = [(c, 1)]
 insertIntoCount c ((c', count):rest)
-  | c' == c = (c', count+1) : rest
+  | c' == c   = (c', count+1) : rest
   | otherwise = (c', count) : insertIntoCount c rest
 
 removeFromCount :: Eq a => a -> [(a, Int)] -> [(a, Int)]
 removeFromCount _ [] = []
 removeFromCount c ((c', count):rest)
-  | c' == c = (c', count-1):rest
+  | c' == c   = (c', count-1):rest
   | otherwise = (c', count) : removeFromCount c rest
-
-getMinLetterCount :: Result -> [(Char, Int)]
-getMinLetterCount = foldr insertIntoCount [] . getChars
-  where
-    getChars = getWrongSpot <> getWithState Correct
-
-getCount :: Eq a => a -> [a] -> Int
-getCount x = length . filter (==x)
 
 getCounts :: Eq a => [a] -> [(a, Int)]
 getCounts = foldr insertIntoCount []
-
-correctCount :: String -> [(Char, Int)] -> Bool
-correctCount str = all go
-  where
-    go (c, i) = getCount c str >= i
-
-correctCount' :: Guess -> Result -> Bool
-correctCount' g = correctCount (toList g) . getMinLetterCount
 
 getWithState :: ResultState -> Result -> [Char]
 getWithState s = map extract . filter predicate . toList
   where
     extract (ResultCell _ c) = c
     predicate (ResultCell s' _) = s' == s
-
-getNotInWord :: Result -> [Char]
-getNotInWord x = getWithState Wrong x \\ (getWithState Correct x ++ getWithState WrongSpot x)
-
-getWrongSpot :: Result -> [Char]
-getWrongSpot = getWithState WrongSpot
 
 instance Ppr (Result, Guess) where
   ppr (r, g) = renderColorfulString $ mconcat $ toList (go <$> r <*> g)

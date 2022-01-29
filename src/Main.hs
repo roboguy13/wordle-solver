@@ -35,30 +35,21 @@ import Debug.Trace
 nub' :: Ord a => [a] -> [a]
 nub' = toList . S.fromList
 
-resultToConstraints :: Result -> [Constraint]
-resultToConstraints r = insertResult r []
-
--- TODO: Restructure to improve efficiency
-matches :: Result -> Guess -> Bool
-matches r g = all (matchesConstraint g) (resultToConstraints r)
-
-correctCell :: ResultCell' a -> Bool
-correctCell (ResultCell Correct _) = True
-correctCell _ = False
-
-correctResult :: Result -> Bool
-correctResult = all correctCell
-
 wordToString :: Word Char -> String
 wordToString = toList
 
 generateGuess :: [Word Char] -> [(Result, Guess)] -> Guess
 generateGuess possibleGuesses results0 =
   let results = map fst results0
+      newGuesses =
+        sortOn (Down . getWeight results)
+        $ filter (\g -> all (`matches` g) results)
+        $ possibleGuesses
   in
-  case sortOn (Down . getWeight results) $ filter (\g -> all (`matches` g) results) possibleGuesses of
-    [] -> error $ "Cannot find guess. This should be unreachable, if the hints are correct. Failed with results:\n" ++ unlines (map showResultPair results0) ++ "\n" ++ show (concatMap resultToConstraints results)
+  case newGuesses of
     (guess:_) -> guess
+
+    [] -> error $ "Cannot find guess. This should be unreachable, if the hints are correct. Failed with results:\n" ++ unlines (map showResultPair results0) ++ "\n" ++ show (concatMap resultToCts results)
 
 generateGuessList :: Word Char -> [Word Char] -> [(Result, Guess)]
 generateGuessList correct possibleGuesses0 = go possibleGuesses0 []
