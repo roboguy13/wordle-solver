@@ -76,15 +76,6 @@ generateGuessList correct possibleGuesses0 = go possibleGuesses0 []
 showResultPair :: (Result, Guess) -> String
 showResultPair (r, g) = toList g <> "   " <> showResult r
 
--- showResultPairColors :: (Result, Guess) -> String
--- showResultPairColors (r, g) = concat $ toList $ go <$> r <*> g
---   where
---     reset = "\ESC[0m"
---     blackText = "\ESC[30m"
---     go (ResultCell Correct c) _ = "\ESC[42m" ++ blackText ++ [c] ++ reset
---     go (ResultCell Wrong   _) c = [c]
---     go (ResultCell WrongSpot _) c = "\ESC[43m" ++ blackText ++ [c] ++ reset
-
 getWeight :: [Result] -> Guess -> Int
 getWeight results guess = length (toList guess \\ guessedChars)
   where

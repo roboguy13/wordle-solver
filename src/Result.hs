@@ -44,7 +44,6 @@ parseResult :: Word Char -> String -> Result
 parseResult guess resultStr = ResultCell <$> toWord (map parseResultState resultStr) <*> guess
 
 genResult :: Word Char -> Guess -> Result
--- genResult correct guess = makeCell <$> fmap (`evalState` startUses) (go <$> correct <*> guess) <*> guess
 genResult correct guess = makeCell <$> (`evalState` startUses) (sequenceA (go <$> correct <*> guess)) <*> guess
   where
     startUses :: [(Char, Int)]
@@ -76,10 +75,7 @@ insertIntoCount c ((c', count):rest)
 removeFromCount :: Eq a => a -> [(a, Int)] -> [(a, Int)]
 removeFromCount _ [] = []
 removeFromCount c ((c', count):rest)
-  | c' == c =
-      -- if count == 0
-      --   then error "Tried to remove 0 count character"
-        (c', count-1):rest
+  | c' == c = (c', count-1):rest
   | otherwise = (c', count) : removeFromCount c rest
 
 getMinLetterCount :: Result -> [(Char, Int)]
