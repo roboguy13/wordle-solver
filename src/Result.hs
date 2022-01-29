@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Result
   where
@@ -11,6 +12,8 @@ import           Data.List
 import           Control.Monad.State
 
 import           Word
+
+import           Ppr
 
 data ResultState = Correct | WrongSpot | Wrong
   deriving (Show, Eq, Ord)
@@ -109,4 +112,11 @@ getNotInWord x = getWithState Wrong x \\ (getWithState Correct x ++ getWithState
 
 getWrongSpot :: Result -> [Char]
 getWrongSpot = getWithState WrongSpot
+
+instance Ppr (Result, Guess) where
+  ppr (r, g) = renderColorfulString $ mconcat $ toList (go <$> r <*> g)
+    where
+      go (ResultCell Correct c) _ = greenColor [c]
+      go (ResultCell Wrong   _) c = defaultColor [c]
+      go (ResultCell WrongSpot _) c = yellowColor [c]
 
