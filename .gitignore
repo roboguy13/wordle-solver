@@ -1,0 +1,12 @@
+*.o
+*.so
+a.out
+*.dylib
+*.dyn_o
+*.dyn_hi
+*.hi
+src/Main
+src/*.prof
+*.ps
+*.hp
+.DS_Store
