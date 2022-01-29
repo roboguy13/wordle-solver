@@ -40,17 +40,6 @@ resultToConstraints r = insertResult r []
 -- TODO: Restructure to improve efficiency
 matches :: Result -> Guess -> Bool
 matches r g = all (matchesConstraint g) (resultToConstraints r)
--- matches r g = and (go <$> r <*> g) && ((notInWord \\ toList g) == notInWord) && correctCount' g r -- && ((wrongSpot \\ toList g) == [])
---   where
---     notInWord = getNotInWord r
---     wrongSpot = getWrongSpot r
-
---     go (ResultCell Correct c) guessC = guessC == c
---     go (ResultCell WrongSpot c) guessC = guessC /= c
---     go (ResultCell Wrong c) guessC = guessC /= c
-
--- type WordTrie = Trie Char
-
 
 correctCell :: ResultCell' a -> Bool
 correctCell (ResultCell Correct _) = True
@@ -109,9 +98,6 @@ main =
       possibleAnswerList <- read <$> readFile "../possible-answers.txt" :: IO [String]
       possibleGuessList <- read <$> readFile "../possible-guesses.txt" :: IO [String]
 
-      -- let possibleAnswers = buildTrie 0 possibleAnswerList
-      --     possibleGuesses = buildTrie 0 possibleGuessList
-
       gen <- getStdGen
       -- let gen = StdGen {unStdGen = read "SMGen 14993497723278503808 4078047727160935881"}
       putStrLn $ "Random generator state: " ++ show gen
@@ -124,8 +110,5 @@ main =
 
       mapM_ (putStrLn . showResultPairColors) theGuesses
 
-      -- print $ possibleAnswers
-      -- print $ length possibleAnswerList
-      -- print $ length possibleGuessList
     _ -> error "Wrong number of arguments. Expected 1"
 

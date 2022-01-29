@@ -17,8 +17,6 @@ import           Control.Monad.State
 import           Word
 import           Result
 
--- data Defined a = Unknown | Known a deriving (Functor)
-
 newtype Defined a = Defined (Maybe a) deriving (Functor, Applicative, Monad)
 
 pattern Known x = Defined (Just x)
