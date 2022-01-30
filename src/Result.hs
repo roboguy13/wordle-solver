@@ -98,7 +98,7 @@ getWithState s = map extract . filter predicate . toList
     predicate (ResultCell s' _) = s' == s
 
 instance Ppr (Result, Guess) where
-  ppr (r, g) = renderColorfulString $ mconcat $ toList (go <$> r <*> g)
+  ppr (r, g) = renderColorfulString $ fold (go <$> r <*> g)
     where
       go (ResultCell Correct c) _ = greenColor [c]
       go (ResultCell Wrong   _) c = defaultColor [c]
